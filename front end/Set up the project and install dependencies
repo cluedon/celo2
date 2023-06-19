@@ -1,0 +1,3 @@
+npx create-react-app decentralized-identity-app
+cd decentralized-identity-app
+npm install web3 @celo/contractkit
