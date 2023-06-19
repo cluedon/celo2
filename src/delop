@@ -1,0 +1,43 @@
+require('dotenv').config();
+const ContractKit = require('@celo/contractkit');
+
+const kit = ContractKit.newKit('https://alfajores-forno.celo-testnet.org'); // Replace with your desired network
+
+const fs = require('fs');
+const path = require('path');
+
+const contractName = 'Identity'; // Replace with your contract name
+const contractPath = path.resolve(__dirname, 'build', contractName + '.json');
+
+const contractFile = fs.readFileSync(contractPath, 'utf8');
+const contractData = JSON.parse(contractFile);
+const bytecode = contractData.contracts[':' + contractName].bin;
+const abi = contractData.contracts[':' + contractName].abi;
+
+async function deploy() {
+  const accounts = await kit.web3.eth.getAccounts();
+  const from = accounts[0];
+
+  const deployTx = await kit.sendTransaction({
+    data: bytecode,
+    from: from,
+  });
+
+  const receipt = await deployTx.waitReceipt();
+
+  console.log('Contract deployed at address:', receipt.contractAddress);
+}
+
+const { CeloWallet } = require('@celo/wallet-base');
+
+const privateKey = process.env.PRIVATE_KEY;
+const wallet = new CeloWallet(privateKey);
+
+kit.addAccount(wallet);
+
+deploy()
+  .then(() => process.exit(0))
+  .catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
